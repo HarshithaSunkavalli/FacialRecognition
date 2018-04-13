@@ -8,7 +8,7 @@ import random
 client = MongoClient("mongodb://152.46.19.17:27017")
 
 db = client.alda_facenet
-train_set = db.train_set
+train_set = db.train_set_220
 
 def update_db():
     i = 1
@@ -17,7 +17,7 @@ def update_db():
             # print(os.path.join(root, file) + " -> " + str(os.path.isdir(file)))
             if(os.path.isdir(file) == False):
                 image = cv2.imread(os.path.join(root, file))
-                result = cv2.resize(image, (96,96), interpolation = cv2.INTER_AREA)
+                result = cv2.resize(image, (220,220), interpolation = cv2.INTER_AREA)
                 name = os.path.basename(os.path.normpath(root))
                 # print(os.path.join(root, file) + "is in " + os.path.basename(os.path.normpath(root)))
                 name = name.replace("_", " ")
@@ -27,13 +27,14 @@ def update_db():
                     "image" : image,
                     "name" : name
                 }
-                # train_set.insert_one(record)
+                train_set.insert_one(record)
                 print(str(i) + " : " + name)
                 i = i + 1
     
 class DataReader:
     def __init__(self, batch_size = 100, batches = 3):
         self.dispatched = 0
+        self.selected = []
         self.batch_size = batch_size
         self.batches = batches
         total = batch_size * batches
@@ -89,7 +90,7 @@ class DataReader:
                 {"$match": {"name":self.final_positions[self.dispatched]['_id']}}, 
                 {"$sample": {"size": 2}}
             ]);    
-            print("base set : ")
+            # print("base set : ")
             key = "anchor"
             name = None
             record = {}
@@ -101,13 +102,30 @@ class DataReader:
 
             found = False
             while found == False:
-                negative_set = train_set.find_one()        
-                # print(negative_set)
-                print("Name of negative set : " + negative_set['name'])
-                if negative_set['name'] != self.final_positions[self.dispatched]['_id']:
-                    record['negative'] = negative_set['image']
-                    record['negative_name'] = negative_set['name']
-                    found = True
+                negative_set = train_set.aggregate([
+                    {"$sample": {"size": 1}}
+                ])        
+                for value in negative_set:
+                    if value['name'] != self.final_positions[self.dispatched]['_id']:
+                        duplicate = False
+                        for x in self.selected:
+                            if x['anchor'] == record['anchor_name'] and x['negative'] == value['name']:
+                                duplicate = True
+                                break
+                        
+                        if duplicate == False:
+                            self.selected.append({"anchor": record['anchor_name'], "negative": value['name']})
+                            record['negative'] = value['image']
+                            record['negative_name'] = value['name']
+                            found = True
+                            
+                                
+                # # print(negative_set)
+                # print("Name of negative set : " + negative_set['name'])
+                # if negative_set['name'] != self.final_positions[self.dispatched]['_id']:
+                #     record['negative'] = negative_set['image']
+                #     record['negative_name'] = negative_set['name']
+                #     found = True
                     
 
             # print(record)
@@ -134,6 +152,8 @@ class DataReader:
             return "Hello"
     
 d = DataReader(3,3)
+print("Data->")
 print(d.getData())
+print("<-End")
 # d.printBatchDetails()
 # print(d.getTrainingData())
