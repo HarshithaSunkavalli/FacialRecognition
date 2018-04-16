@@ -4,33 +4,30 @@ import os
 import fnmatch
 from pymongo import MongoClient
 import random
+import pickle
+import sys
 
-client = MongoClient("mongodb://152.46.19.17:27017")
-
+client = MongoClient("mongodb://152.46.18.168:27017")
 db = client.alda_facenet
-train_set = db.train_set_220
+train_set = db.train_files
+
+
 
 def update_db():
     i = 1
-    for root, dir, files in os.walk(os.path.join("..", "Datasets")):
-        for file in fnmatch.filter(files, "*"):
-            # print(os.path.join(root, file) + " -> " + str(os.path.isdir(file)))
-            if(os.path.isdir(file) == False):
-                image = cv2.imread(os.path.join(root, file))
-                result = cv2.resize(image, (220,220), interpolation = cv2.INTER_AREA)
+    image_dictionary = {}
+    for root, dir, files in os.walk(os.path.join(".", "Datasets")):
+        for file1 in fnmatch.filter(files, "*"):
+            if(os.path.isdir(file1) == False):
                 name = os.path.basename(os.path.normpath(root))
-                # print(os.path.join(root, file) + "is in " + os.path.basename(os.path.normpath(root)))
-                name = name.replace("_", " ")
-                image = image.flatten().tolist()
-                # print(name)
+                number = file1.split('_')[-1].split('.')[0]
                 record = {
-                    "image" : image,
-                    "name" : name
+                    "name" : os.path.basename(os.path.normpath(root)),
+                    "number" : int(number),
+                    "file" : file1
                 }
                 train_set.insert_one(record)
-                print(str(i) + " : " + name)
-                i = i + 1
-    
+
 class DataReader:
     def __init__(self, batch_size = 100, batches = 3):
         self.dispatched = 0
@@ -72,20 +69,22 @@ class DataReader:
                 if s < total:
                     self.final_positions[s] = record
 
-        # print(self.final_positions)
-        print("Length => " + str(len(self.final_positions)))
 
+        # print("Length => " + str(len(self.final_positions)))
+        # print(str(self.final_positions))
 
     def getData(self):
         
-        # print(record)
         if self.dispatched > self.batch_size * self.batches:
             return "Cant retrieve data"
         i = 0
         data = []
+        anchor_list = []
+        positive_list = []
+        negative_list = []
+
         while i < self.batch_size:
-            
-            # for record in self.final_positions:
+
             base_set = train_set.aggregate([
                 {"$match": {"name":self.final_positions[self.dispatched]['_id']}}, 
                 {"$sample": {"size": 2}}
@@ -94,12 +93,23 @@ class DataReader:
             key = "anchor"
             name = None
             record = {}
-            for value in base_set:
-                record[key] = value['image']
-                key = "positive"
-                name = value['name']
-            record['anchor_name'] = name
 
+            anchor_flag = True
+            for value in base_set:
+                file2 = os.path.join(".","Datasets","lfw", value['name'], value['file'])
+                # print(file)
+                image = cv2.imread(file2)
+                # print(image.shape)
+                result = cv2.resize(image, (220,220), interpolation = cv2.INTER_AREA)
+                # print(result.shape)
+
+                if anchor_flag == True:
+                    anchor_flag = False
+                    anchor_list.append(result)
+                    record['anchor_name'] = value['file']
+                else:
+                    positive_list.append(result)
+                    
             found = False
             while found == False:
                 negative_set = train_set.aggregate([
@@ -109,51 +119,31 @@ class DataReader:
                     if value['name'] != self.final_positions[self.dispatched]['_id']:
                         duplicate = False
                         for x in self.selected:
-                            if x['anchor'] == record['anchor_name'] and x['negative'] == value['name']:
+                            if x['anchor'] == record['anchor_name'] and x['negative'] == value['file']:
                                 duplicate = True
                                 break
                         
                         if duplicate == False:
-                            self.selected.append({"anchor": record['anchor_name'], "negative": value['name']})
-                            record['negative'] = value['image']
-                            record['negative_name'] = value['name']
+                            self.selected.append({"anchor": record['anchor_name'], "negative": value['file']})
+                            file3 = os.path.join(".","Datasets","lfw", value['name'], value['file'])
+                            # print(file)
+                            image = cv2.imread(file3)
+                            # print(image.shape)
+                            result = cv2.resize(image, (220,220), interpolation = cv2.INTER_AREA)
+                            # print(result.shape)
+                            negative_list.append(result)
                             found = True
                             
-                                
-                # # print(negative_set)
-                # print("Name of negative set : " + negative_set['name'])
-                # if negative_set['name'] != self.final_positions[self.dispatched]['_id']:
-                #     record['negative'] = negative_set['image']
-                #     record['negative_name'] = negative_set['name']
-                #     found = True
-                    
-
-            # print(record)
-            data.append(record)
             self.dispatched += 1
             i += 1
+
+        data.append(anchor_list)
+        data.append(positive_list)
+        data.append(negative_list)
         return data
 
-    def printBatchDetails(self):
-        print(str(self.batches) + " : " + str(self.batch_size))
-
-    def getTrainingData(self):
-        if(self.batches == 0):
-            return None
-        else:
-            self.batches = self.batches - 1
-
-
-            base_set = train_set.aggregate([
-                {"$match": {"name":"Harsha"}}, 
-                {"$sample": {"size": 2}}
-            ]);
-
-            return "Hello"
-    
-d = DataReader(3,3)
-print("Data->")
-print(d.getData())
-print("<-End")
-# d.printBatchDetails()
-# print(d.getTrainingData())
+# d = DataReader(150,100)
+#
+# for i in range(0, 100):
+#     data = d.getData()
+#     print(i)
