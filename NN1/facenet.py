@@ -2,7 +2,6 @@ import math
 import numpy as np
 import h5py
 import scipy
-import cv2
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -243,7 +242,7 @@ def recognize(sess, inputImage):
 
 video = cv2.VideoCapture(0)
 # Dump first 10 frames to allow webcam to adjust to lighting
-for i in range(10):
+for i in range(50):
     check, frame = video.read()
 
 img_no = 0
@@ -254,6 +253,8 @@ identity = ""
 while True:
 
     check, frame = video.read()  # Capture image from webcam
+    if check == False:
+        print("Frame is empty")
     cv2.imshow("FaceNet Facial Recognition", frame)  # Show app
     if identity:
         cv2.putText(frame, identity, (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0))

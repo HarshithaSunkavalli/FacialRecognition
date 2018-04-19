@@ -158,9 +158,9 @@ def forward_prop(parameters, x):
 def triplet_loss(y_pred, alpha=0.5):
     anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
 
-    pos_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, positive)))
+    pos_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, positive)),axis = -1)
 
-    neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)))
+    neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)),axis = -1)
 
     basic_loss = tf.add(tf.subtract(pos_dist, neg_dist), alpha)
 
@@ -168,7 +168,7 @@ def triplet_loss(y_pred, alpha=0.5):
 
     return loss
 
-batches = 2889
+batches = 1500
 def loadCache(iter):
     with open('./cache/inputs'+str(iter)+'.pkl','rb') as f:  # Python 3: open(..., 'rb')
         anchor,positive,negative = pickle.load(f)
@@ -192,10 +192,13 @@ init  = tf.global_variables_initializer()
 saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
-    epochs = 1
-    train_cache_file = './faceNet1.meta'
+    epochs = 3
+    train_cache_file = './faceNet2.meta'
     if os.path.exists(train_cache_file):
-        saver.restore(sess, './faceNet1')
+        saver.restore(sess, './faceNet2')
+        print("Restoring Model")
+    else:
+        print("No Saved Model Found. Starting training from scratch. Batches:"+str(batches))
     for epoch in range(epochs):
         avgCost = 0
         iters = batches
@@ -203,11 +206,12 @@ with tf.Session() as sess:
             anchor, positive, negative = loadCache(i)
             curr_cost, _ = sess.run([loss, optim], feed_dict={x: anchor, y: positive, z: negative})
             avgCost += curr_cost
-            if (i % 100 == 0):
-                print("i:" + str(i) + ", loss = " + str(curr_cost))
+            if (i % 25 == 0):
+                print("iteration:" + str(i) + ", loss = " + str(curr_cost))
             # print(embed1)
             # print(embed2)
         avgCost /= iters
         print("Avg Loss :" + str(avgCost))
 
-    saver.save(sess, './faceNet1')
+    saver.save(sess, './faceNet2')
+    print("Model Saved to disk")
