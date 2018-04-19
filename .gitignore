@@ -1,7 +1,13 @@
 NN1/my-firstmodel1.data-00000-of-00001
 NN1/my-firstmodel1.index
 NN1/my-firstmodel1.meta
+NN1/facenet1.data-00000-of-00001
+NN1/facenet1.index
+NN1/facenet1.meta
 NN1/checkpoint
 NN1/Datasets/*
 NN1/cache/*
 *.pkl
+NN1/OldSavefiles/*
+NN1/recognizableFaces/*
+NN1/SampleDataset/*
