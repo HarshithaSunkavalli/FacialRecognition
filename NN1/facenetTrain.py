@@ -168,9 +168,9 @@ def triplet_loss(y_pred, alpha=0.5):
 
     return loss
 
-batches = 1500
+batches = 300
 def loadCache(iter):
-    with open('./cache/inputs'+str(iter)+'.pkl','rb') as f:  # Python 3: open(..., 'rb')
+    with open('../cache/inputs'+str(iter)+'.pkl','rb') as f:  # Python 3: open(..., 'rb')
         anchor,positive,negative = pickle.load(f)
     return anchor,positive,negative
 
@@ -185,7 +185,7 @@ with tf.variable_scope("FaceNet", reuse=tf.AUTO_REUSE):
     preds3 = forward_prop(params,z)
 
 loss = triplet_loss([preds1,preds2,preds3],0.5)
-optim = tf.train.AdagradOptimizer(0.05,name = 'optim').minimize(loss)
+optim = tf.train.AdamOptimizer(0.000001,name = 'optim').minimize(loss)
 
 init  = tf.global_variables_initializer()
 
@@ -193,9 +193,9 @@ saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
     epochs = 3
-    train_cache_file = './faceNet2.meta'
+    train_cache_file = './faceNet21.meta'
     if os.path.exists(train_cache_file):
-        saver.restore(sess, './faceNet2')
+        saver.restore(sess, './faceNet21')
         print("Restoring Model")
     else:
         print("No Saved Model Found. Starting training from scratch. Batches:"+str(batches))
@@ -213,5 +213,5 @@ with tf.Session() as sess:
         avgCost /= iters
         print("Avg Loss :" + str(avgCost))
 
-    saver.save(sess, './faceNet2')
+    saver.save(sess, './faceNet21')
     print("Model Saved to disk")

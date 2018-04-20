@@ -11,3 +11,7 @@ NN1/cache/*
 NN1/OldSavefiles/*
 NN1/recognizableFaces/*
 NN1/SampleDataset/*
+*.meta
+*.index
+*.data-00000-of-00001
+checkpoint
