@@ -75,9 +75,11 @@ def forward_prop(parameters, x):
 
     # Conv 1
     Z1 = tf.nn.conv2d(x, conv1, strides=[1, 2, 2, 1], padding='VALID')
-    A1 = tf.nn.relu(Z1)
-    P1 = tf.nn.max_pool(A1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
-    N1 = tf.nn.lrn(P1)
+    with tf.variable_scope("b1") as scope:
+        B1 = tf.layers.batch_normalization(Z1, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A1 = tf.nn.relu(B1)
+        P1 = tf.nn.max_pool(A1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N1 = tf.nn.lrn(P1)
 
     # Conv 2A
     Z2a = tf.nn.conv2d(N1, conv2a, strides=[1, 1, 1, 1], padding='SAME')
@@ -85,43 +87,56 @@ def forward_prop(parameters, x):
 
     # Conv 2
     Z2 = tf.nn.conv2d(A2a, conv2, strides=[1, 1, 1, 1], padding='SAME')
-    A2 = tf.nn.relu(Z2)
-    N2 = tf.nn.lrn(A2)
-    P2 = tf.nn.max_pool(N2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b2") as scope:
+        B2 = tf.layers.batch_normalization(Z2, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A2 = tf.nn.relu(B2)
+        P2 = tf.nn.max_pool(A2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N2 = tf.nn.lrn(P2)
 
     # Conv 3A
-    Z3a = tf.nn.conv2d(P2, conv3a, strides=[1, 1, 1, 1], padding='SAME')
+    Z3a = tf.nn.conv2d(N2, conv3a, strides=[1, 1, 1, 1], padding='SAME')
     A3a = tf.nn.relu(Z3a)
 
     # Conv 3
     Z3 = tf.nn.conv2d(A3a, conv3, strides=[1, 1, 1, 1], padding='SAME')
-    A3 = tf.nn.relu(Z3)
-    P3 = tf.nn.max_pool(A3, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b3") as scope:
+        B3 = tf.layers.batch_normalization(Z3, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A3 = tf.nn.relu(B3)
+        P3 = tf.nn.max_pool(A3, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N3 = tf.nn.lrn(P3)
 
     # Conv 4a
-    Z4a = tf.nn.conv2d(P3, conv4a, strides=[1, 1, 1, 1], padding='SAME')
+    Z4a = tf.nn.conv2d(N3, conv4a, strides=[1, 1, 1, 1], padding='SAME')
     A4a = tf.nn.relu(Z4a)
 
     # Conv 4
     Z4 = tf.nn.conv2d(A4a, conv4, strides=[1, 1, 1, 1], padding='SAME')
-    A4 = tf.nn.relu(Z4)
+    with tf.variable_scope("b4") as scope:
+        B4 = tf.layers.batch_normalization(Z4, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A4 = tf.nn.relu(B4)
+        N4 = tf.nn.lrn(A4)
 
     # Conv 5a
-    Z5a = tf.nn.conv2d(A4, conv5a, strides=[1, 1, 1, 1], padding='SAME')
+    Z5a = tf.nn.conv2d(N4, conv5a, strides=[1, 1, 1, 1], padding='SAME')
     A5a = tf.nn.relu(Z5a)
 
     # Conv 5
     Z5 = tf.nn.conv2d(A5a, conv5, strides=[1, 1, 1, 1], padding='SAME')
-    A5 = tf.nn.relu(Z5)
+    with tf.variable_scope("b5") as scope:
+        B5 = tf.layers.batch_normalization(Z5, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A5 = tf.nn.relu(B5)
+        N5 = tf.nn.lrn(A5)
 
     # Conv 6a
-    Z6a = tf.nn.conv2d(A5, conv6a, strides=[1, 1, 1, 1], padding='SAME')
+    Z6a = tf.nn.conv2d(N5, conv6a, strides=[1, 1, 1, 1], padding='SAME')
     A6a = tf.nn.relu(Z6a)
 
     # Conv 6
     Z6 = tf.nn.conv2d(A6a, conv6, strides=[1, 1, 1, 1], padding='SAME')
-    A6 = tf.nn.relu(Z6)
-    P6 = tf.nn.max_pool(A6, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b6") as scope:
+        B6 = tf.layers.batch_normalization(Z6, axis=1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A6 = tf.nn.relu(B6)
+        P6 = tf.nn.max_pool(A6, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     # Flattening
     P6F = tf.contrib.layers.flatten(P6)
@@ -150,7 +165,7 @@ def forward_prop(parameters, x):
         A_FC7 = tf.nn.relu(Z_FC7)
 
     # l2 Normalization
-    embeddings = tf.nn.l2_normalize(A_FC7,None)
+    embeddings = tf.nn.l2_normalize(A_FC7)
 
     return embeddings
 
@@ -170,7 +185,7 @@ def triplet_loss(y_pred, alpha=0.5):
 
 batches = 300
 def loadCache(iter):
-    with open('../cache/inputs'+str(iter)+'.pkl','rb') as f:  # Python 3: open(..., 'rb')
+    with open('./cache/inputs'+str(iter)+'.pkl','rb') as f:  # Python 3: open(..., 'rb')
         anchor,positive,negative = pickle.load(f)
     return anchor,positive,negative
 
@@ -185,17 +200,17 @@ with tf.variable_scope("FaceNet", reuse=tf.AUTO_REUSE):
     preds3 = forward_prop(params,z)
 
 loss = triplet_loss([preds1,preds2,preds3],0.5)
-optim = tf.train.AdamOptimizer(0.000001,name = 'optim').minimize(loss)
+optim = tf.train.AdamOptimizer(0.00001,name = 'optim').minimize(loss)
 
 init  = tf.global_variables_initializer()
 
 saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
-    epochs = 3
-    train_cache_file = './faceNet21.meta'
+    epochs = 1
+    train_cache_file = './faceNet3.meta'
     if os.path.exists(train_cache_file):
-        saver.restore(sess, './faceNet21')
+        saver.restore(sess, './faceNet3')
         print("Restoring Model")
     else:
         print("No Saved Model Found. Starting training from scratch. Batches:"+str(batches))
@@ -213,5 +228,5 @@ with tf.Session() as sess:
         avgCost /= iters
         print("Avg Loss :" + str(avgCost))
 
-    saver.save(sess, './faceNet21')
+    saver.save(sess, './faceNet3')
     print("Model Saved to disk")
