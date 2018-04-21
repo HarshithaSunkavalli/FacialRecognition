@@ -5,7 +5,8 @@ NN1/facenet1.data-00000-of-00001
 NN1/facenet1.index
 NN1/facenet1.meta
 NN1/checkpoint
-NN1/Datasets/*
+NN1/Datasets/lfw/*
+NN1/Datasets/*.zip
 NN1/cache/*
 *.pkl
 NN1/OldSavefiles/*
