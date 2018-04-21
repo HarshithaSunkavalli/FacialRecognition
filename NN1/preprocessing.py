@@ -154,8 +154,8 @@ def loadDataBatch(loaderInstance):
     return anchor,positive,negative
 
 
-batchSize = 128
-batches = 8000
+batchSize = 64
+batches = 600
 dataLoaderInstance = getLoaderInstance(batchSize, batches)
 
 anchor = np.empty((batchSize,220,220,3))
@@ -163,14 +163,14 @@ positive = np.empty((batchSize,220,220,3))
 negative = np.empty((batchSize,220,220,3))
 for i in range(batches):
     anchor,positive,negative = loadDataBatch(dataLoaderInstance)
-    with open('./cache/inputs'+str(i)+'.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+    with open('./cache2/inputs'+str(i)+'.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
         pickle.dump([anchor, positive, negative], f, 0)
-    if(i%100==0):
+    if(i%20==0):
         print(i)
         
-print(anchor.shape)
-d = DataReader(150,100)
-
-for i in range(0, 100):
-    data = d.getData()
-    print(i)
+# print(anchor.shape)
+# d = DataReader(150,100)
+#
+# for i in range(0, 100):
+#     data = d.getData()
+#     print(i)
