@@ -207,7 +207,7 @@ init  = tf.global_variables_initializer()
 saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
-    epochs = 40
+    epochs = 150
     train_cache_file = './faceNet1.meta'
     if os.path.exists(train_cache_file):
         saver.restore(sess, './faceNet1')

@@ -353,7 +353,7 @@ def webcam():
                     cv2.imwrite(file, resized_frame)
                     capture_image_flag = 0;
                 print(10)
-                min_dist, result = naiveRecognize(resized_frame)  # Send resized images to CCN, get embeddings
+                min_dist, result = recognize(sess,resized_frame)  # Send resized images to CCN, get embeddings
                 print(11)
                 name = result + " Iteration: " + str(frame_count / capture_rate) + " Min dist: " + str(min_dist)
 
@@ -365,7 +365,7 @@ def webcam():
 
     finally:
         try:
-            # sess.close()
+            sess.close()
             print(1)
         except NameError:
             print("Session not started yet")

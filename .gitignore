@@ -10,7 +10,6 @@ NN1/Datasets/*.zip
 NN1/cache/*
 *.pkl
 NN1/OldSavefiles/*
-NN1/recognizableFaces/*
 NN1/SampleDataset/*
 *.meta
 *.index

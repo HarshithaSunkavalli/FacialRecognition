@@ -159,7 +159,7 @@ def loadDataBatch(loaderInstance):
 
 
 batchSize = 64
-batches = 600
+batches = 445
 dataLoaderInstance = getLoaderInstance(batchSize, batches)
 
 anchor = np.empty((batchSize,220,220,3))
