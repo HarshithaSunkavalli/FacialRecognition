@@ -76,9 +76,11 @@ def forward_prop(parameters, x):
 
     # Conv 1
     Z1 = tf.nn.conv2d(x, conv1, strides=[1, 2, 2, 1], padding='VALID')
-    A1 = tf.nn.relu(Z1)
-    P1 = tf.nn.max_pool(A1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
-    N1 = tf.nn.lrn(P1)
+    with tf.variable_scope("b1") as scope:
+        B1 = tf.layers.batch_normalization(Z1, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A1 = tf.nn.relu(B1)
+        P1 = tf.nn.max_pool(A1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N1 = tf.nn.lrn(P1)
 
     # Conv 2A
     Z2a = tf.nn.conv2d(N1, conv2a, strides=[1, 1, 1, 1], padding='SAME')
@@ -86,43 +88,56 @@ def forward_prop(parameters, x):
 
     # Conv 2
     Z2 = tf.nn.conv2d(A2a, conv2, strides=[1, 1, 1, 1], padding='SAME')
-    A2 = tf.nn.relu(Z2)
-    N2 = tf.nn.lrn(A2)
-    P2 = tf.nn.max_pool(N2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b2") as scope:
+        B2 = tf.layers.batch_normalization(Z2, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A2 = tf.nn.relu(B2)
+        P2 = tf.nn.max_pool(A2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N2 = tf.nn.lrn(P2)
 
     # Conv 3A
-    Z3a = tf.nn.conv2d(P2, conv3a, strides=[1, 1, 1, 1], padding='SAME')
+    Z3a = tf.nn.conv2d(N2, conv3a, strides=[1, 1, 1, 1], padding='SAME')
     A3a = tf.nn.relu(Z3a)
 
     # Conv 3
     Z3 = tf.nn.conv2d(A3a, conv3, strides=[1, 1, 1, 1], padding='SAME')
-    A3 = tf.nn.relu(Z3)
-    P3 = tf.nn.max_pool(A3, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b3") as scope:
+        B3 = tf.layers.batch_normalization(Z3, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A3 = tf.nn.relu(B3)
+        P3 = tf.nn.max_pool(A3, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+        N3 = tf.nn.lrn(P3)
 
     # Conv 4a
-    Z4a = tf.nn.conv2d(P3, conv4a, strides=[1, 1, 1, 1], padding='SAME')
+    Z4a = tf.nn.conv2d(N3, conv4a, strides=[1, 1, 1, 1], padding='SAME')
     A4a = tf.nn.relu(Z4a)
 
     # Conv 4
     Z4 = tf.nn.conv2d(A4a, conv4, strides=[1, 1, 1, 1], padding='SAME')
-    A4 = tf.nn.relu(Z4)
+    with tf.variable_scope("b4") as scope:
+        B4 = tf.layers.batch_normalization(Z4, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A4 = tf.nn.relu(B4)
+        N4 = tf.nn.lrn(A4)
 
     # Conv 5a
-    Z5a = tf.nn.conv2d(A4, conv5a, strides=[1, 1, 1, 1], padding='SAME')
+    Z5a = tf.nn.conv2d(N4, conv5a, strides=[1, 1, 1, 1], padding='SAME')
     A5a = tf.nn.relu(Z5a)
 
     # Conv 5
     Z5 = tf.nn.conv2d(A5a, conv5, strides=[1, 1, 1, 1], padding='SAME')
-    A5 = tf.nn.relu(Z5)
+    with tf.variable_scope("b5") as scope:
+        B5 = tf.layers.batch_normalization(Z5, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A5 = tf.nn.relu(B5)
+        N5 = tf.nn.lrn(A5)
 
     # Conv 6a
-    Z6a = tf.nn.conv2d(A5, conv6a, strides=[1, 1, 1, 1], padding='SAME')
+    Z6a = tf.nn.conv2d(N5, conv6a, strides=[1, 1, 1, 1], padding='SAME')
     A6a = tf.nn.relu(Z6a)
 
     # Conv 6
     Z6 = tf.nn.conv2d(A6a, conv6, strides=[1, 1, 1, 1], padding='SAME')
-    A6 = tf.nn.relu(Z6)
-    P6 = tf.nn.max_pool(A6, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
+    with tf.variable_scope("b6") as scope:
+        B6 = tf.layers.batch_normalization(Z6, epsilon=0.00001, reuse=tf.AUTO_REUSE)
+        A6 = tf.nn.relu(B6)
+        P6 = tf.nn.max_pool(A6, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     # Flattening
     P6F = tf.contrib.layers.flatten(P6)
@@ -151,7 +166,7 @@ def forward_prop(parameters, x):
         A_FC7 = tf.nn.relu(Z_FC7)
 
     # l2 Normalization
-    embeddings = tf.nn.l2_normalize(A_FC7)
+    embeddings = tf.nn.l2_normalize(A_FC7,None)
 
     return embeddings
 
@@ -240,37 +255,132 @@ def recognize(sess, inputImage):
     return min_dist, identity
 
 
-video = cv2.VideoCapture(0)
-# Dump first 10 frames to allow webcam to adjust to lighting
-for i in range(50):
-    check, frame = video.read()
+def naiveRecognize(Frame):
+    min_dist = 10000000
+    distList = []
+    identity = "Unrecognized"
+    for (name, db_emb) in database.items():
+        inputImage = cv2.imread("./database/" + name + ".jpg")
+        processedImage = np.expand_dims(cv2.resize(inputImage, (220, 220), interpolation=cv2.INTER_AREA), axis=0)
+        dist = getDistanceBetweenEmbeddings(Frame, processedImage)
+        # print(name,dist,db_emb)
+        distList.append(dist)
+        if dist < min_dist:
+            min_dist = dist
+            identity = name
 
-img_no = 0
-frame_count = 0
-capture_rate = 30
-identity = ""
+    if min_dist > 1000000:
+        print("Not in the database.", str(distList))
+        identity = "Not in the database"
+    else:
+        output_img = cv2.imread("recognizableFaces/" + identity + ".jpg")
+        # plt.subplot(2,1,2)
+        # imshow(output_img)
+        print("It's " + str(identity) + "!!, The distance is " + str(min_dist))
+    return min_dist, identity
 
-while True:
+import time
+import threading
+from tkinter import *
+import cv2
 
-    check, frame = video.read()  # Capture image from webcam
-    if check == False:
-        print("Frame is empty")
-    cv2.imshow("FaceNet Facial Recognition", frame)  # Show app
-    if identity:
-        cv2.putText(frame, identity, (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0))
-    key = cv2.waitKey(1)  # Hit q to quit
-    if key == ord('q'):
-        break
-    frame_count = frame_count + 1  # Update count of total images captured
-    if frame_count % capture_rate == 15:  # Capture only nth image, n = capture_rate
-        resized_frame = cv2.resize(frame, (220, 220), interpolation=cv2.INTER_AREA)  # Resize image
-        min_dist, identity = recognize(sess, resized_frame)  # Send resized images to CCN, get embeddings
-        # nameList=["hari", "akshay", "sathwick"]
-        # identity = nameList[random.randint(0,len(nameList)-1)]
-        # print(identity, frame_count)
+root = Tk()
+# Make window 300x150 and place at position (50,50)
+root.geometry("500x500+150+50")
+root.title("Tkinter Test")
+# Create a main menu and add a command to it
+main_menu = Menu(root, tearoff=0)
+main_menu.add_command(label="Quit", command=root.destroy)
+root.config(menu=main_menu)
 
-print(identity)
-messagebox.showinfo("Results", "Detected face of: "+str())
-sess.close()
-video.release()  # Release Webcam
-cv2.destroyAllWindows()
+# Create a Label
+my_text = Label(root, text="Waiting...")
+my_text.pack()
+
+name = ""
+capture_image_flag = 0
+
+
+def updateText(string):
+    my_text.config(foreground='black', background='white', text="Recognised face is: " + string)
+    my_text.pack()
+
+
+def setCaptureImageFlag():
+    global capture_image_flag
+    capture_image_flag = 1
+
+
+def webcam():
+    # Get Webcam
+    video = cv2.VideoCapture(0)
+    # Dump first 10 frames to allow webcam to adjust to lighting
+    for i in range(10):
+        check, frame = video.read()
+
+    img_no = 0
+    frame_count = 0
+    capture_rate = 50
+    global name, capture_image_flag
+    result = ""
+    try:
+        while True:
+            check, frame = video.read()  # Capture image from webcam
+
+            cv2.namedWindow("FaceNet Facial Recognition", cv2.WINDOW_NORMAL)  # Show app
+            width = 600
+            height = 600
+            cv2.resizeWindow("FaceNet Facial Recognition", width, height)
+            x1 = int(width * 0.25)
+            y1 = int(height * 0.75)
+            x2 = int(width * 0.75)
+            y2 = int(height * 0.25)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+            cv2.imshow("FaceNet Facial Recognition", frame)  # Show app
+
+            key = cv2.waitKey(1)  # Hit q to quit
+            if key == ord('q'):
+                break
+
+            frame_count = frame_count + 1  # Update count of total images captured
+
+            if frame_count % capture_rate == 0:  # Capture only nth image, n = capture_rate
+                crop_img = frame[y2:y1, x1:x2]
+                resized_frame = cv2.resize(crop_img, (220, 220), interpolation=cv2.INTER_AREA)  # Resize image
+
+                if capture_image_flag == 1:
+                    file = "./database/test_image_" + str(frame_count) + ".jpg"
+                    cv2.imwrite(file, resized_frame)
+                    capture_image_flag = 0;
+                print(10)
+                min_dist, result = naiveRecognize(resized_frame)  # Send resized images to CCN, get embeddings
+                print(11)
+                name = result + " Iteration: " + str(frame_count / capture_rate) + " Min dist: " + str(min_dist)
+
+            # Update textbox
+            updateText(name)
+            root.update()
+    except:
+        print("Error Occured")
+
+    finally:
+        try:
+            # sess.close()
+            print(1)
+        except NameError:
+            print("Session not started yet")
+        video.release()  # Release Webcam
+        cv2.destroyAllWindows()  # Close app
+        root.destroy()
+
+
+# Create a button to reopen webcam
+button = Button(text="Reopen Webcam", width=15, command=webcam)
+button.pack()
+
+button = Button(text="Capture Image from Webcam", width=25, command=setCaptureImageFlag)
+button.pack()
+
+webcam()
+
+root.mainloop()

@@ -208,9 +208,9 @@ saver = tf.train.Saver()
 with tf.Session() as sess:
     sess.run(init)
     epochs = 40
-    train_cache_file = './faceNet31.meta'
+    train_cache_file = './faceNet1.meta'
     if os.path.exists(train_cache_file):
-        saver.restore(sess, './faceNet31')
+        saver.restore(sess, './faceNet1')
         print("Restoring Model")
     else:
         print("No Saved Model Found. Starting training from scratch. Batches:"+str(batches))
@@ -228,5 +228,5 @@ with tf.Session() as sess:
         avgCost /= iters
         print("Avg Loss :" + str(avgCost))
 
-    saver.save(sess, './faceNet31')
+    saver.save(sess, './faceNet1')
     print("Model Saved to disk")
