@@ -1,7 +1,7 @@
 To run the code, 
 
 First Download the LFW zip file from http://vis-www.cs.umass.edu/lfw/lfw.tgz and Create a "Datasets" folder in the NN1 directory and
-extract the lfw zip file downloaded here. In the end, you should have all the image folders of the dataset in the "NN1/Datasets/lfw/" directory
+extract the lfw zip file downloaded here. In the end, you should have all the images of the dataset in the following location: "NN1/Datasets/lfw/<identity>/<filename>.png" 
 
 Now install anaconda, scipy, tensorflow, cv2, pymongo, pickle and other required packages in python3.
 

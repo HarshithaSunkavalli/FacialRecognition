@@ -1,9 +1,9 @@
 import math
 import numpy as np
-import h5py
-import scipy
-from scipy import ndimage
-import matplotlib.pyplot as plt
+#import h5py
+#import scipy
+#from scipy import ndimage
+#import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.framework import ops
 import pickle
@@ -11,7 +11,7 @@ import pickle
 import random
 np.random.seed(1)
 
-from matplotlib.pyplot import imshow
+#from matplotlib.pyplot import imshow
 import cv2
 import tkinter
 from tkinter import messagebox
@@ -244,13 +244,14 @@ def recognize(sess, inputImage):
         if dist < min_dist:
             min_dist = dist
             identity = name
-
-    if min_dist > 1:
+	
+    if min_dist > 0.8:
         print("Not in the database.",str(distList))
+        identity = "Not in database"
     else:
         output_img = cv2.imread("recognizableFaces/" + identity + ".jpg")
         # plt.subplot(2,1,2)
-        imshow(output_img)
+        #imshow(output_img)
         print("It's " + str(identity) + "!!, The distance is " + str(min_dist))
     return min_dist, identity
 
